@@ -17,11 +17,17 @@ global mu_Earth tspan mu_dot ...
 mu_Earth   = 3.986004415E5; % Earth gravitational parameter
 Num_Agent  = 6;             % Number of agents in the system
 N          = 6;             % Size of the state space
-McRuns     = 100;           % Number of Monte Calo simulations 
+McRuns     = 1;           % Number of Monte Calo simulations 
 MonteCarlo = struct('CrtStd',cell(1),...
                     'NumbReplanningAgent',cell(1),...
                     'ReplanningSequences',cell(1));
-
+str = getenv('USER');
+if strcmp(str,'hermann')
+    addpath('../casadi-osx-matlabR2015a-v3.5.5')
+elseif strcmp(str,'heka9489')
+    addpath('/opt/casadi-matlab/')
+end
+import casadi.*
 % --------------------- Specifying the chief's orbit ----------------------
 a_chief      = 1.42e4;   % Semi-major axis in Km
 e_chief      = 0.5;      % Eccentricity
@@ -49,6 +55,201 @@ X0_Chief1 = [Position_target1; Velocity_target1];
 [~, Xnom0] = ode113(@(t,X)M2BodyOde(t,X,mu_Earth),Ttraj0,Xnom(1,:)',options);
 [~, Xnomf] = ode113(@(t,X)M2BodyOde(t,X,mu_Earth),Ttrajf,Xnom(end,:)',options);
 ChiefMeanMotion = sqrt(mu_Earth/a_chief^3);
+
+
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%!!!!!!!!!!!!!!   Using CasADi for generating Mex Files    %!!!!!!!!!!!!!
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+for i = 1
+    CasADiopts = struct('main', true, 'mex', true);
+    TT0 = Ttraj0/Tc; TTf = Ttrajf/Tc; T_normalized = tspan/Tc; 
+    tt = MX.sym('t');
+    
+    %=====================================================================%
+    if exist('ChiefState','file') == 3
+        delete ChiefState.c ChiefState.mexmaci64
+    end
+    Chief_x  = casadi.interpolant('Chief_x','bspline',{T_normalized},Xnom(:,1)');
+    Chief_y  = casadi.interpolant('Chief_y','bspline',{T_normalized},Xnom(:,2)');
+    Chief_z  = casadi.interpolant('Chief_z','bspline',{T_normalized},Xnom(:,3)');
+    Chief_dx = casadi.interpolant('Chief_dx','bspline',{T_normalized},Xnom(:,4)');
+    Chief_dy = casadi.interpolant('Chief_dy','bspline',{T_normalized},Xnom(:,5)');
+    Chief_dz = casadi.interpolant('Chief_dz','bspline',{T_normalized},Xnom(:,6)');
+    Output   = [Chief_x(tt);Chief_y(tt);Chief_z(tt);...
+                Chief_dx(tt);Chief_dy(tt);Chief_dz(tt)];
+    ChiefState = Function('ChiefState',{tt},...
+                 {Output},{'time'},{'Output'});
+    ChiefState.generate('ChiefState.c',CasADiopts);
+    mex ChiefState.c -largeArrayDims
+    
+    
+    %=====================================================================%
+    if exist('ChiefState0','file') == 3
+        delete ChiefState0.c ChiefState0.mexmaci64
+    end
+    Chief_x0  = casadi.interpolant('Chief_x0','bspline',{TT0},Xnom0(:,1)');
+    Chief_y0  = casadi.interpolant('Chief_y0','bspline',{TT0},Xnom0(:,2)');
+    Chief_z0  = casadi.interpolant('Chief_z0','bspline',{TT0},Xnom0(:,3)');
+    Chief_dx0 = casadi.interpolant('Chief_dx0','bspline',{TT0},Xnom0(:,4)');
+    Chief_dy0 = casadi.interpolant('Chief_dy0','bspline',{TT0},Xnom0(:,5)');
+    Chief_dz0 = casadi.interpolant('Chief_dz0','bspline',{TT0},Xnom0(:,6)');
+    Output0   = [Chief_x0(tt);Chief_y0(tt);Chief_z0(tt);...
+                 Chief_dx0(tt);Chief_dy0(tt);Chief_dz0(tt)];
+    ChiefState0 = Function('ChiefState0',{tt},...
+                  {Output0},{'time'},{'Output0'});
+    ChiefState0.generate('ChiefState0.c',CasADiopts);
+    mex ChiefState0.c -largeArrayDims
+    
+    
+    %=====================================================================%
+    if exist('ChiefStatef','file') == 3
+        delete ChiefStatef.c ChiefStatef.mexmaci64
+    end
+    Chief_xf  = casadi.interpolant('Chief_xf','bspline',{TTf},Xnomf(:,1)');
+    Chief_yf  = casadi.interpolant('Chief_yf','bspline',{TTf},Xnomf(:,2)');
+    Chief_zf  = casadi.interpolant('Chief_zf','bspline',{TTf},Xnomf(:,3)');
+    Chief_dxf = casadi.interpolant('Chief_dxf','bspline',{TTf},Xnomf(:,4)');
+    Chief_dyf = casadi.interpolant('Chief_dyf','bspline',{TTf},Xnomf(:,5)');
+    Chief_dzf = casadi.interpolant('Chief_dzf','bspline',{TTf},Xnomf(:,6)');
+    Outputf   = [Chief_xf(tt);Chief_yf(tt);Chief_zf(tt);...
+                 Chief_dxf(tt);Chief_dyf(tt);Chief_dzf(tt)];
+    ChiefStatef = Function('ChiefStatef',{tt},...
+                  {Outputf},{'time'},{'Outputf'});
+    ChiefStatef.generate('ChiefStatef.c',CasADiopts);
+    mex ChiefStatef.c -largeArrayDims
+    
+    %=====================================================================%
+    clear Chief_x Chief_y Chief_z Chief_dx Chief_dy Chief_dz Output ChiefState ...
+        Chief_x0 Chief_y0 Chief_z0 Chief_dx0 Chief_dy0 Chief_dz0 Output0 ChiefState0 ...
+        Chief_xf Chief_yf Chief_zf Chief_dxf Chief_dyf Chief_dzf Outputf ChiefStatef
+end
+for j = 1
+    CasADiopts = struct('main', true, 'mex', true);
+    XChief = SX.sym('XC',6);  tt    = SX.sym('t'); Penalty = SX.sym('Penalty');
+    rho1 = SX.sym('rho1',6);  drho1 = SX.sym('drho1',6);
+    rho2 = SX.sym('rho2',6);  drho2 = SX.sym('drho2',6);
+    rho3 = SX.sym('rho3',6);  drho3 = SX.sym('drho3',6);
+    rho4 = SX.sym('rho4',6);  drho4 = SX.sym('drho4',6);
+    rho5 = SX.sym('rho5',6);  drho5 = SX.sym('drho5',6);
+    rho6 = SX.sym('rho6',6);  drho6 = SX.sym('drho6',6);
+    
+    Xaug  = [rho1;rho2;rho3;rho4;rho5;rho6];
+    dXaug = [drho1;drho2;drho3;drho4;drho5;drho6];
+    
+    M = 3; N = 6;
+    if exist('L','file') == 3
+        delete L.c L.mexmaci64 ...
+               dLdx.c dLdx.mexmaci64 ...
+               fdrift.c fdrift.mexmaci64
+    end
+    
+    for i = 1:Num_Agent
+        if i == 1
+            % [Fc F], note: the F_bar matrix in paper
+            F = eye(N); F_Aug = F;
+            % penalty matrix (D matrix in the paper)
+            D = diag([Penalty*ones(1,N-M) ones(1,M)]); D_Aug = D;
+        else
+            F_Aug = blkdiag(F_Aug,F);
+            D_Aug = blkdiag(D_Aug,D);
+        end
+    end
+    
+    drift = NonDimentionalized_NLodeCasADi(tt,Xaug,XChief); % Drift vector field
+    H = (F_Aug.')^(-1)*D_Aug*F_Aug^(-1);
+    B = []; % Barrier Function (State Constraint)
+    G = (sum(B)+1)*H; % Riemannian Metric
+    L = Function('L',{Xaug,dXaug,Penalty,tt,XChief},...
+        {(dXaug - drift).' * G * (dXaug - drift)},...
+        {'X','dX','k','t','XChief'},...
+        {'CurveLength'}); % Curve Length
+    dLdx = L.jacobian();
+    fdrift = Function('fdrift',{tt,Xaug,XChief},{drift});
+    
+    % Rewrite the functions as .Mex files
+    L.generate('L.c',CasADiopts);
+    dLdx.generate('dLdx.c',CasADiopts);
+    fdrift.generate('fdrift.c',CasADiopts);
+    
+    % Generating Mex files from the c files
+    mex L.c -largeArrayDims
+    mex dLdx.c -largeArrayDims
+    mex fdrift.c -largeArrayDims
+    
+    clear L dLdx fdrift rho1 drho1 rho2 drho2
+end
+for j = 1
+    CasADiopts = struct('main', true, 'mex', true);
+    XChief = SX.sym('XC',6); tt = SX.sym('tt'); Penalty = SX.sym('Penalty');
+    Lr1 = SX.zeros(1); Lr2 = SX.zeros(1); Lr3 = SX.zeros(1);
+    Lr4 = SX.zeros(1); Lr5 = SX.zeros(1); Lr6 = SX.zeros(1);
+    Lr7 = SX.zeros(1); Lr8 = SX.zeros(1); Lr9 = SX.zeros(1);
+    
+    if exist('Lreplan','file') == 3
+        delete Lreplan.c Lreplan.mexmaci64 ...
+               Lreplandx.c Lreplandx.mexmaci64
+    end
+    if exist('fdriftreplan','file') == 3
+        delete fdriftreplan.c fdriftreplan.mexmaci64
+    end
+    rho   = SX.sym('rho',6);   drho  = SX.sym('drho',6);
+    Obst1 = SX.sym('Obst1',3); Obst2 = SX.sym('Obst2',3);
+    Obst3 = SX.sym('Obst3',3); Obst4 = SX.sym('Obst4',3);
+    Obst5 = SX.sym('Obst5',3); Obst6 = SX.sym('Obst6',3);
+    Obst7 = SX.sym('Obst7',3); Obst8 = SX.sym('Obst8',3);
+    Obst9 = SX.sym('Obst9',3);
+    ObstaclesStates = [Obst1 Obst2 Obst3 Obst4 Obst5 Obst6 Obst7 Obst8 Obst9];
+    
+    % Defining the metric, before adding the state constraint barrier functions
+    F = eye(N); D = diag([Penalty*ones(1,N-M) ones(1,M)]); H = (F.')^(-1)*D*F^(-1);
+    % Defining the drift vector field
+    drift = NonDimentionalized_NLodeCasADi(tt,rho,XChief);
+    
+    % ------------------- state constraint barrier function ------------------
+    B  = SX.zeros(1); Num_Obstacles = Num_Agent-1;
+    kb = SX.sym('Kb',Num_Agent,2); pb = SX.sym('Pb',Num_Agent,2);
+    
+    for i = 1:Num_Obstacles
+        delR = rho(1:3) - ObstaclesStates(:,i);
+        B = B + kb(i,1)*exp( -(1/2)*(norm(delR)/pb(i,1))^2 );
+        G = (B+1)*H;
+    
+        if i==1
+            Lr1 = (drho - drift).' * G * (drho - drift);
+        elseif i==2
+            Lr2 = (drho - drift).' * G * (drho - drift);
+        elseif i==3
+            Lr3 = (drho - drift).' * G * (drho - drift);
+        elseif i==4
+            Lr4 = (drho - drift).' * G * (drho - drift);
+        elseif i==5
+            Lr5 = (drho - drift).' * G * (drho - drift);
+        elseif i==6
+            Lr6 = (drho - drift).' * G * (drho - drift);
+        elseif i==7
+            Lr7 = (drho - drift).' * G * (drho - drift);
+        elseif i==8
+            Lr8 = (drho - drift).' * G * (drho - drift);
+        elseif i==9
+            Lr9 = (drho - drift).' * G * (drho - drift);
+        end
+    end
+    
+    Lreplan = Function('Lreplan',{rho,drho,Penalty,tt,XChief,ObstaclesStates,kb,pb},...
+        {Lr1,Lr2,Lr3,Lr4,Lr5,Lr6,Lr7,Lr8,Lr9},...
+        {'X','dX','k','t','XChief','ObstaclesStates','Kb','Pb'},...
+        {'Lr1','Lr2','Lr3','Lr4','Lr5','Lr6','Lr7','Lr8','Lr9'});
+    Lreplandx = Lreplan.jacobian();
+    Lreplan.generate('Lreplan.c',CasADiopts);
+    Lreplandx.generate('Lreplandx.c',CasADiopts);
+    mex Lreplan.c -largeArrayDims
+    mex Lreplandx.c -largeArrayDims
+    
+    fdriftreplan = Function('fdriftreplan',{tt,rho,XChief},{drift});
+    fdriftreplan.generate('fdriftreplan.c',CasADiopts);
+    mex fdriftreplan.c -largeArrayDims
+    clear fd Lreplan Lreplandx
+end
 
 
 %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
