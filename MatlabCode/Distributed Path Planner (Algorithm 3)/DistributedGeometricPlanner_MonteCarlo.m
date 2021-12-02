@@ -353,7 +353,10 @@ for Mc = 1:McRuns
 end
 save MonteCarloResults.mat MonteCarlo -v7.3 % Saving the Results
 
-
+number = '2028171774';
+carrier = 'AT&T';
+message = 'Your MatLab code is done running!';
+send_text_message(number,carrier,message)
 
 
 
