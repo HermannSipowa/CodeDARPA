@@ -11,6 +11,7 @@ close all
 start_up
 format long e
 clc
+disp('This code is running!')
 global mu_Earth tspan mu_dot ...
     Num_Agent a_chief e_chief Tc
 % ----------------- Calculating the boundaries conditions ----------------

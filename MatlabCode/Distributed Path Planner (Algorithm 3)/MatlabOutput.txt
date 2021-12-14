@@ -1,0 +1,118 @@
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2021 The MathWorks, Inc.
+                  R2021a (9.10.0.1602886) 64-bit (glnxa64)
+                             February 17, 2021
+
+ 
+To get started, type doc.
+For product information, visit www.mathworks.com.
+ 
+>> >> >> >> >> >> >> >> >> >> >> >> >> >> This code is running!
+>> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> Building with 'gcc'.
+MEX completed successfully.
+Building with 'gcc'.
+MEX completed successfully.
+Building with 'gcc'.
+MEX completed successfully.
+>> Building with 'gcc'.
+MEX completed successfully.
+Building with 'gcc'.
+MEX completed successfully.
+Building with 'gcc'.
+MEX completed successfully.
+>> Building with 'gcc'.
+MEX completed successfully.
+Building with 'gcc'.
+MEX completed successfully.
+Building with 'gcc'.
+MEX completed successfully.
+>> >> >> >> >> >> solving PDE...
+Elapsed time is 16.380834 seconds.
+Elapsed time is 7.466129 seconds.
+Elapsed time is 3.614113 seconds.
+solving PDE...
+Elapsed time is 43.793345 seconds.
+Elapsed time is 714.260131 seconds.
+Elapsed time is 488.423374 seconds.
+Elapsed time is 58.082924 seconds.
+Elapsed time is 4.502199 seconds.
+Elapsed time is 5.017090 seconds.
+Elapsed time is 5.130915 seconds.
+Elapsed time is 4.001667 seconds.
+Elapsed time is 3.010607 seconds.
+Elapsed time is 1.891707 seconds.
+Elapsed time is 1.373493 seconds.
+Elapsed time is 1.978959 seconds.
+Elapsed time is 1.328725 seconds.
+solving PDE...
+Elapsed time is 14.092516 seconds.
+Elapsed time is 38065.537473 seconds.
+Elapsed time is 155327.805463 seconds.
+Elapsed time is 3106.183425 seconds.
+Elapsed time is 3.669523 seconds.
+Elapsed time is 3.586725 seconds.
+Elapsed time is 8.743572 seconds.
+Elapsed time is 12.541066 seconds.
+Elapsed time is 5.178086 seconds.
+Elapsed time is 5.073153 seconds.
+solving PDE...
+Elapsed time is 30.037623 seconds.
+Elapsed time is 3.469606 seconds.
+Elapsed time is 2.204285 seconds.
+Elapsed time is 10.308878 seconds.
+Elapsed time is 2.292977 seconds.
+Elapsed time is 5.547613 seconds.
+Elapsed time is 1.268326 seconds.
+Elapsed time is 1.210963 seconds.
+solving PDE...
+Elapsed time is 76.261209 seconds.
+Elapsed time is 2.136988 seconds.
+Elapsed time is 2.042797 seconds.
+Elapsed time is 17.785783 seconds.
+Elapsed time is 1.929165 seconds.
+Elapsed time is 2.102401 seconds.
+solving PDE...
+Elapsed time is 58.452245 seconds.
+Elapsed time is 2.736701 seconds.
+Elapsed time is 3.691208 seconds.
+Elapsed time is 5.332457 seconds.
+Elapsed time is 2.211687 seconds.
+Elapsed time is 1.827912 seconds.
+Elapsed time is 1.797322 seconds.
+Elapsed time is 1.788357 seconds.
+solving PDE...
+Elapsed time is 11.637290 seconds.
+Elapsed time is 103.806902 seconds.
+Elapsed time is 9.505036 seconds.
+Elapsed time is 2.061099 seconds.
+solving PDE...
+Elapsed time is 39.523122 seconds.
+Elapsed time is 1.639125 seconds.
+Elapsed time is 1.715476 seconds.
+Elapsed time is 1.438758 seconds.
+solving PDE...
+Elapsed time is 39.644855 seconds.
+Elapsed time is 3.659406 seconds.
+Elapsed time is 914.972978 seconds.
+Elapsed time is 8.090799 seconds.
+Elapsed time is 3.313745 seconds.
+Elapsed time is 3.121562 seconds.
+Elapsed time is 2.996438 seconds.
+Elapsed time is 1.724076 seconds.
+Elapsed time is 1.656802 seconds.
+solving PDE...
+Elapsed time is 19.336725 seconds.
+Elapsed time is 31.394825 seconds.
+Elapsed time is 2.196071 seconds.
+solving PDE...
+Elapsed time is 12.100504 seconds.
+Elapsed time is 1.629025 seconds.
+Elapsed time is 1.462490 seconds.
+solving PDE...
+Elapsed time is 13.514173 seconds.
+{Unrecognized field name "IterationIndex".
+} 
+>> >> >> >> >> >> {Undefined function 'send_text_message' for input arguments of type 'char'.
+} 
+>> >> >> >> >> >> >> >> >> >> >> >> 
