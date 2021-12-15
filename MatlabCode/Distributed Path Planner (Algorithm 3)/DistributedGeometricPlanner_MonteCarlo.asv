@@ -11,6 +11,7 @@ close all
 start_up
 format long e
 clc
+disp('This code is running!')
 global mu_Earth tspan mu_dot ...
     Num_Agent a_chief e_chief Tc
 % ----------------- Calculating the boundaries conditions ----------------
@@ -324,9 +325,8 @@ for Mc = 1:McRuns
                            'Xrelf',{Traj2(:,1:6),  Traj2(:,7:12),...
                                     Traj2(:,13:18),Traj2(:,19:24),...
                                     Traj2(:,25:30),Traj2(:,31:36)},...
-                           'IterationIndex',cell(1,6),...
-                           'AGHFCostNew',cell(1,6));
-    end 
+                           'KeepOutRadius',cell(5,1));
+    end
     
     
     % ======================================================================= %
@@ -416,9 +416,6 @@ for Mc = 1:McRuns
     % -------------------- Receding Horizon Path Planner ---------------------
     % ======================================================================= %
     for jk = 1
-        clc
-        tmax  = 1e7;
-        t     = [0 logspace(-2,log10(tmax),tpoints-1)];
         MCiteration = jk
         FMat2 = eye(N);
         DMat2 = diag([Penalty*ones(1,N-M) ones(1,M)]);
