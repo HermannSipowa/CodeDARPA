@@ -44,7 +44,7 @@ classdef Spacecraft3D
          % I_Flatplate = 1/12*mass*[obj.L^2; obj.l^2; obj.L^2+obj.l^2];
          % I_cube = mass*[obj.side^2/6; obj.side^2/6; obj.side^2/6 + obj.side^2/2];
          % I_total = I_Flatplate + I_cube;
-         I_total = (1/10)*(1/1100)*1/12*mass*[obj.L^2; obj.l^2; obj.L^2+obj.l^2];
+         I_total = 1/12*mass*[obj.L^2; obj.l^2; obj.L^2+obj.l^2];
       end
       
    end

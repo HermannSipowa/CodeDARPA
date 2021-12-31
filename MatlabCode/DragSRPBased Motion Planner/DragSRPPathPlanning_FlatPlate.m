@@ -1,7 +1,7 @@
 %--------------------------------------------------------------------------
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%% Hermann Kaptui Sipowa
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%         Hermann Kaptui Sipowa         %%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %--------------------------------------------------------------------------
 clear
 close all
@@ -14,8 +14,8 @@ ae        = 6378.136;
 mu_Earth  = 3.986004415E5;
 JD        = 2456296.25;
 AU        = 149597870.7;
-Chasser   = Spacecraft3D([20, 20, 1, .25, 2, 2, 0.2, 0.5, 3, 0, 0]); % Deputy characteristic
-Target    = Spacecraft3D([0, 0, 2, .25, 1.5, .5, 0.2, 0.5, 1.5, 0, 0]); % Target characteristic
+Chasser   = Spacecraft3D([50, 50, 1, .25, 2, 2, 0.2, 0.5, 3, 1.28, 0]); % Deputy characteristic
+Target    = Spacecraft3D([0, 0, 2, .25, 1.5, .5, 0.2, 0.5, 1.5, 0.5, 0]); % Target characteristic
 Num_Agent = 1; % Number of agents in the system
 SimTime   = 0.25;
 N   = 13;
@@ -35,8 +35,8 @@ c11 = rgb('Teal');
 %=======================================%
 % Specifying the chief's orbit
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-hp           = 1e4; % Peri-apsis altitude
-e_chief      = 0.1; % Eccentricity
+hp           = 1000; % Peri-apsis altitude
+e_chief      = 0.5; % Eccentricity
 a_chief      = (ae+hp)/(1-e_chief); % Semi-major axis in Km 
 inc_chief    = 50;  % Inclination in deg0
 BigOmg_chief = 10;  % RAAN in deg
@@ -55,7 +55,7 @@ M_chief1     = 0;   % Initial mean anomaly
 for i = 1
     
     Period  = (2*pi)*sqrt(a_chief^3/mu_Earth);
-    Tc      = 4*Period;
+    Tc      = 10*Period;
     IntTime = SimTime*Tc;
     Tsize   = 1e4;
     tspan   = linspace(0,IntTime,Tsize);
@@ -168,7 +168,7 @@ for ll = 1
     % % Deputy final conditions
     % %~~~~~~~~~~~~~~~~~~~~~~~~~~~%
     % af_Deyty      = a_chief+25; % Semi-major axis in Km (600 Km altitude)
-    % ef_Deyty      = 0.15;       % Eccentricity
+    % ef_Deyty      = 0.5;       % Eccentricity
     % incf_Deyty    = 50.1;       % Inclination in deg0
     % BigOmgf_Deyty = 10.0;       % RAAN in deg
     % LitOmgf_Deyty = 10.0;          % AOP in deg
@@ -187,18 +187,23 @@ for ll = 1
     %
     % % q_t0 = load('q_t0.mat');  qr_chasser00 = q_t0.qr_chasser00;
     % % q_tf = load('q_tf.mat');  qr_chasserf0 = q_tf.qr_chasserf0;
-    % qr_chasser00 = [6; 4; 9; 1]; % randi([1 9],[4 1]); %
-    % qr_chasserf0 = [7; 5; 1; 8]; % randi([1 9],[4 1]); %
+    % qr_chasser00 = randi([1 9],[4 1]); %  [6; 4; 9; 1]; % [4; 3; 6; 8]; %
+    % qr_chasserf0 = randi([1 9],[4 1]); %  [7; 5; 1; 8]; % [4; 2; 4; 3]; %
     %
     % qr_chasser0 = qr_chasser00/norm(qr_chasser00);
-    % Omega_chaser0 = 5e-2*[deg2rad(-.9) deg2rad(.8) -deg2rad(.7)]'; % Angular velocity in inertial frame
+    % Omega_chaser0 = 5e-6*deg2rad(randi([1 9],[3 1])); % [4;8;4]
     % CN = Quaternion_to_DCM(qr_chasser0); Omega_chaser_B0 = CN*Omega_chaser0;
     % X0 = [qr_chasser0; Omega_chaser0; X01];
     %
     % qr_chasserf = qr_chasserf0/norm(qr_chasserf0);
-    % Omega_chaserf = 3e-3*[deg2rad(-.3) deg2rad(.3) -deg2rad(.1)]';
+    % Omega_chaserf = 3e-5*deg2rad(randi([1 9],[3 1])); % [4;4;2]
     % CN = Quaternion_to_DCM(qr_chasserf); Omega_chaser_Bf = CN*Omega_chaserf;
     % Xf = [qr_chasserf; Omega_chaserf; Xf1];
+    %
+    % AgentNom.q0 = qr_chasser00;
+    % AgentNom.qf = qr_chasserf0;
+    % AgentNom.X0 = X0;
+    % AgentNom.Xf = Xf;
 end
 for ll = 1
     r0 = Xnom0(1,1:3)'; v0 = Xnom0(1,4:6)';
@@ -217,73 +222,111 @@ for ll = 1
     OE_chief2 = [a2_chief, theta2_chief, inc2_chief, q12_chief, q22_chief, BigOmg2_chief];
     AMap2 = ForwardMapping(OE_chief2, mu_Earth); % Linear mapping matrix
     
-    % Specify the final relative-orbital elements of the deputies in both orbits
-    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-    dela = 0;
-    dele = 25/(5*a_chief);
-    deli = -50/(3*a_chief);
-    delLitOmg = -2*pi*1E-6;
-    delBigOmg = 0;
-    delM = pi*1E-4;
-    delq1_1 = dele*cos(BigOmg_chief) - e_chief*sin(BigOmg_chief)*delLitOmg;
-    delq2_1 = dele*sin(BigOmg_chief) + e_chief*cos(BigOmg_chief)*delLitOmg;
-    deltheta = delLitOmg + delM; % Relative true latitude in rad
-    delCOE_1 = [dela, deltheta, deli, delq1_1, delq2_1, delBigOmg]';
+    % % Specify the final relative-orbital elements of the deputies in both orbits
+    % %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+    % dela = 0;
+    % dele = 25/(5*a_chief);
+    % deli = -50/(3*a_chief);
+    % delLitOmg = -2*pi*1E-6;
+    % delBigOmg = 0;
+    % delM = pi*1E-4;
+    % delq1_1 = dele*cos(BigOmg_chief) - e_chief*sin(BigOmg_chief)*delLitOmg;
+    % delq2_1 = dele*sin(BigOmg_chief) + e_chief*cos(BigOmg_chief)*delLitOmg;
+    % deltheta = delLitOmg + delM; % Relative true latitude in rad
+    % delCOE_1 = [dela, deltheta, deli, delq1_1, delq2_1, delBigOmg]';
+    %
+    %
+    % dele = -20/(2*a_chief);
+    % deli = -25/(2*a_chief);
+    % delLitOmg = -5*pi*1E-4;
+    % delBigOmg = pi*1E-4;
+    % delM = 0;
+    % delq1_1 = dele*cos(BigOmg_chief) - e_chief*sin(BigOmg_chief)*delLitOmg;
+    % delq2_1 = dele*sin(BigOmg_chief) + e_chief*cos(BigOmg_chief)*delLitOmg;
+    % deltheta = delLitOmg + delM; % Relative true latitude in rad
+    % delCOE_2 = [dela, deltheta, deli, delq1_1, delq2_1, delBigOmg]';
+    %
+    %
+    % dele = 20/(3*a_chief);
+    % deli = 50/(2*a_chief);
+    % delLitOmg = -2*pi*1E-6;
+    % delBigOmg = -5*pi*1E-6;
+    % delM = pi*1E-4;
+    % delq1_1 = dele*cos(BigOmg_chief) - e_chief*sin(BigOmg_chief)*delLitOmg;
+    % delq2_1 = dele*sin(BigOmg_chief) + e_chief*cos(BigOmg_chief)*delLitOmg;
+    % deltheta = delLitOmg + delM; % Relative true latitude in rad
+    % delCOE_3 = [dela, deltheta, deli, delq1_1, delq2_1, delBigOmg]';
+    %
+    % dele2 = 10/(8*a_chief);
+    % deli2 = 50/(4*a_chief);
+    % delBigOmg = -pi*1E-4;
+    % delM = 5*pi*1E-4;
+    % delLitOmg = pi*1E-3;
+    % deltheta = delLitOmg + delM; % Relative true latitude in rad
+    %
+    % delq1_2  = dele2*cos(BigOmg_chief) - e_chief*sin(BigOmg_chief)*delLitOmg;
+    % delq2_2  = dele2*sin(BigOmg_chief) + e_chief*cos(BigOmg_chief)*delLitOmg;
+    % delCOE_4 = [dela, deltheta, deli2, delq1_2, delq2_2, delBigOmg]';
+    %
+    % % Integrating the deputy initial and final trajectories
+    % %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+    % X01 = AMap1*delCOE_1;
+    % X02 = AMap1*delCOE_2;
+    % Xf1 = AMap2*delCOE_3;
+    % Xf2 = AMap2*delCOE_4;
     
+    N = 6;
+    X0 = nan(Num_Agent*N,1); Xf = nan(Num_Agent*N,1);
+    for k = 1:Num_Agent
+        idx = 1+N*(k-1):N*k;
+        dela = 0;
+        
+        dele1     = -1/(3*a_chief) *randi([1 9]);
+        deli1     = -((-1)^k)/(a_chief) *randi([1 9]);
+        delLitOmg = (1/5)*pi*1E-5 *randi([1 9]);
+        delBigOmg = (1/5)*pi*1E-5 *randi([1 9]);
+        delM      = (1/5)*pi*1E-6 *randi([1 9]);
+        delq1_1   = dele1*cos(LitOmg_chief) - e_chief*sin(LitOmg_chief)*delLitOmg;
+        delq2_1   = dele1*sin(LitOmg_chief) + e_chief*cos(LitOmg_chief)*delLitOmg;
+        deltheta  = delLitOmg + delM; % Relative true latitude in rad
+        delCOE_0  = [dela, deltheta, deli1, delq1_1, delq2_1, delBigOmg]';
+        X0(idx,1) = AMap1*delCOE_0;
+        
+        dele1     = 1/(2*a_chief) *randi([1 9]);
+        deli1     = ((-1)^k)/(a_chief) *randi([1 9]);
+        delLitOmg = (1/5)*pi*1E-5 *randi([1 9]);
+        delBigOmg = (1/5)*pi*1E-5 *randi([1 9]);
+        delM      = (1/5)*pi*1E-6 *randi([1 9]);
+        delq1_1   = dele1*cos(LitOmg_chief) - e_chief*sin(LitOmg_chief)*delLitOmg;
+        delq2_1   = dele1*sin(LitOmg_chief) + e_chief*cos(LitOmg_chief)*delLitOmg;
+        deltheta  = delLitOmg + delM; % Relative true latitude in rad
+        delCOE_f  = [dela, deltheta, deli1, delq1_1, delq2_1, delBigOmg]';
+        Xf(idx,1) = AMap2*delCOE_f;
+    end
     
-    dele = -20/(2*a_chief);
-    deli = -25/(2*a_chief);
-    delLitOmg = -5*pi*1E-4;
-    delBigOmg = pi*1E-4;
-    delM = 0;
-    delq1_1 = dele*cos(BigOmg_chief) - e_chief*sin(BigOmg_chief)*delLitOmg;
-    delq2_1 = dele*sin(BigOmg_chief) + e_chief*cos(BigOmg_chief)*delLitOmg;
-    deltheta = delLitOmg + delM; % Relative true latitude in rad
-    delCOE_2 = [dela, deltheta, deli, delq1_1, delq2_1, delBigOmg]';
-    
-    
-    dele = 20/(3*a_chief);
-    deli = 50/(2*a_chief);
-    delLitOmg = -2*pi*1E-6;
-    delBigOmg = -5*pi*1E-6;
-    delM = pi*1E-4;
-    delq1_1 = dele*cos(BigOmg_chief) - e_chief*sin(BigOmg_chief)*delLitOmg;
-    delq2_1 = dele*sin(BigOmg_chief) + e_chief*cos(BigOmg_chief)*delLitOmg;
-    deltheta = delLitOmg + delM; % Relative true latitude in rad
-    delCOE_3 = [dela, deltheta, deli, delq1_1, delq2_1, delBigOmg]';
-    
-    dele2 = 10/(8*a_chief);
-    deli2 = 50/(4*a_chief);
-    delBigOmg = -pi*1E-4;
-    delM = 5*pi*1E-4;
-    delLitOmg = pi*1E-3;
-    deltheta = delLitOmg + delM; % Relative true latitude in rad
-    
-    delq1_2  = dele2*cos(BigOmg_chief) - e_chief*sin(BigOmg_chief)*delLitOmg;
-    delq2_2  = dele2*sin(BigOmg_chief) + e_chief*cos(BigOmg_chief)*delLitOmg;
-    delCOE_4 = [dela, deltheta, deli2, delq1_2, delq2_2, delBigOmg]';
-    
-    % Integrating the deputy initial and final trajectories
-    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-    X01 = AMap1*delCOE_1;
-    X02 = AMap1*delCOE_2;
-    Xf1 = AMap2*delCOE_3;
-    Xf2 = AMap2*delCOE_4;
     
     % q_t0 = load('q_t0.mat');  qr_chasser00 = q_t0.qr_chasser00;
     % q_tf = load('q_tf.mat');  qr_chasserf0 = q_tf.qr_chasserf0;
-    qr_chasser00 = randi([1 9],[4 1]); %  [6; 4; 9; 1]; % [4; 3; 6; 8]; % 
-    qr_chasserf0 = randi([1 9],[4 1]); %  [7; 5; 1; 8]; % [4; 2; 4; 3]; % 
+    qr_chasser00 = randi([1 9],[4 1]); %  [6; 4; 9; 1]; % [4; 3; 6; 8]; %
+    qr_chasserf0 = randi([1 9],[4 1]); %  [7; 5; 1; 8]; % [4; 2; 4; 3]; %
     
     qr_chasser0 = qr_chasser00/norm(qr_chasser00);
-    Omega_chaser0 = 5e-4*deg2rad(randi([1 9],[3 1])); % [4;8;4]  
+    Omega_chaser0 = 5e-3*deg2rad(randi([1 9],[3 1])); % [4;8;4]
     CN = Quaternion_to_DCM(qr_chasser0); Omega_chaser_B0 = CN*Omega_chaser0;
-    X0 = [qr_chasser0; Omega_chaser0; X01];
+    X0 = [qr_chasser0; Omega_chaser0; X0];
     
     qr_chasserf = qr_chasserf0/norm(qr_chasserf0);
-    Omega_chaserf = 3e-5*deg2rad(randi([1 9],[3 1])); % [4;4;2]
+    Omega_chaserf = 3e-3*deg2rad(randi([1 9],[3 1])); % [4;4;2]
     CN = Quaternion_to_DCM(qr_chasserf); Omega_chaser_Bf = CN*Omega_chaserf;
-    Xf = [qr_chasserf; Omega_chaserf; Xf1];
+    Xf = [qr_chasserf; Omega_chaserf; Xf];
+    
+    AgentNom.q0 = qr_chasser00;
+    AgentNom.qf = qr_chasserf0;
+    AgentNom.X0 = X0;
+    AgentNom.Xf = Xf;
+    
+    % # of inputs
+    N = length(X0);
 end
 % -------------------------------------------------------------------------
 
@@ -302,8 +345,8 @@ for ll = 1
         % hold on
         % plt1 = plot3(Xrel0(:,1),Xrel0(:,2),Xrel0(:,3),'Color',c5,'LineWidth',5);
         % plt2 = plot3(Xrel1(:,1),Xrel1(:,2),Xrel1(:,3),'Color',c3,'LineWidth',5);
-        % plt3 = plot3(Xrel(:,8),Xrel(:,9),Xrel(:,10),'Color',c11,'LineWidth',5);
-        % % plt7 = plot3(X(8,:),X(9,:),X(10,:),'Color',c9,'LineWidth',5);
+        % plt3 = plot3(Xrel(:,8),Xrel(:,9),Xrel(:,10),'Color',c6,'LineWidth',5);
+        % plt7 = plot3(X(8,:),X(9,:),X(10,:),'Color',c9,'LineWidth',5);
         % plt4 = plot3(Xrel0(1,1),Xrel0(1,2),Xrel0(1,3),'o',...
         %     'LineWidth',2,...
         %     'MarkerEdgeColor',c3,...
@@ -424,26 +467,24 @@ end
 %% --------------------------- AGHF parameters ----------------------------
 for ll = 1
     clc
-    smax = 5e6; % Need typo find an analytic way to solve for this value
+    smax = 5e7; % Need typo find an analytic way to solve for this value
     % # of grids in t
-    tgrids = 250;
+    tgrids = 1000;
     % # of grids in s
-    sgrids = 250;
+    sgrids = 1000;
     % # of grids of integration for final trajectory extraction
     intgrids = 1e5;
-    % # of inputs
-    N = length(X0);
     % penalty value (the lambda in paper)
-    Penalty1 = 1e-3; Penalty2 = 5e1; Penalty3 = 5e2;
+    Penalty1 = 5e2; Penalty2 = 5e4; Penalty3 = 5e5;
     % tolerance of the integrator
-    % opts = odeset('RelTol',2.22045e-9,'AbsTol',2.22045e-14,'NormControl','on');
-    opts = odeset('RelTol',2.22045e-9);
+    opts = odeset('RelTol',2.22045e-9,'AbsTol',2.22045e-14,'NormControl','on');
+    % opts = odeset('RelTol',2.22045e-9);
     % opts = odeset('RelTol',2.22045e-14,'AbsTol',2.22045e-14);
     % Setting the boundary condtions and the intial condition
     tmax = smax; xpoints = tgrids; tpoints = sgrids; m = 0;
     t = [0 logspace(-4,log10(tmax),tpoints-1)]; % discretization of s interval in log scale % linspace(0,tmax,tpoints); % 
     T = SimTime; % motion duration
-    x = linspace(0,T,xpoints); % [0 logspace(-4,log10(T),xpoints-1)];
+    x = linspace(0,T,xpoints); % [0 logspace(-4,log10(T),xpoints-1)]; % 
     xnew = linspace(0,T,intgrids);
 end
 % -------------------------------------------------------------------------
@@ -461,22 +502,11 @@ for ll = 1
                   x,t,opts); % The solution "sol" is of form sol(t,x,i)
     system('killall caffeinate');
     toc;
-    % save q_t0.mat qr_chasser00 -v7.3
-    % save q_tf.mat qr_chasserf0 -v7.3
-    % save sol.mat sol -v7.3
-    % Sol = load('sol.mat');
-    % sol = Sol.sol;
-    
-    % number = '2028171774';
-    % carrier = 'AT&T';
-    % message = 'Your MatLab code is done running!';
-    % send_text_message(number,carrier,message)
 end
 % -------------------------------------------------------------------------
 
 %% ------------------ Calculating the action integral ---------------------
 for ll = 1
-    tic;
     disp('Computing the action integral...');
     % calculate the atuated curve length for each grid of s
     X_temp  = zeros(N,xpoints);
@@ -505,18 +535,20 @@ for ll = 1
     end
     AgentNom.FDesiredInterpolant     = griddedInterpolant(xnew,AgentNom.FDesired,'spline');
     AgentNom.DesiredStateInterpolant = griddedInterpolant(xnew,AgentNom.DesiredState,'spline');
-    toc;
 end
 % -------------------------------------------------------------------------
 
 %% ------------------ Integrate the system's trajectory -------------------
 for ll = 1
     disp('Integrating the resulting trajectory...');
-    options = odeset('RelTol',2.22045e-14,'AbsTol',2.22045e-15); PMat=1e1*diag([1 2 3]); kMat = 3e1; % Controller gains
-    tic
-    [~,X_ode45] = ode15s(@(t,Xaug)DragSRP_FlatPlateControlledOde(t,Xaug,Target,Chasser,kMat,PMat,AgentNom),Tnorm,X0,options);
-    toc
-    disp('Done!!!!!');
+    options = odeset('RelTol',2.22045e-14,'AbsTol',2.22045e-15); PMat=5e4*diag([1 2 3]); kMat = 5e4; % Controller gains
+    [~,AgentNom.X_ode45] = ode15s(@(t,Xaug)DragSRP_FlatPlateControlledOde(t,Xaug,Target,Chasser,kMat,PMat,AgentNom),Tnorm,X0,options);
+    % save Results.mat AgentNom -v7.3
+    % number = '2028171774';
+    % carrier = 'AT&T';
+    % message = 'Your MatLab code is done running!';
+    % send_text_message(number,carrier,message)
+    % disp('Done!!!!!');
 end
 % -------------------------------------------------------------------------
 
@@ -526,35 +558,40 @@ end
 
 %% ----------- Plotting the attitude quaternions of the deputy -----------
 for ll = 1
-    % close all
-    fh2 = figure;
-    LaBeL1 = {'$q_{0}$','$q_{1}$','$q_{2}$','$q_{3}$'};
-    for i = 1:4
-        subplot(2,2,i)
-        plt1 = plot(tspan,Xval(i,:),'Color',c6,'LineWidth',2.5);
-        hold on
-        plt2 = plot(tspan,X_ode45(:,i).','Color',c11,'LineWidth',3);
-        grid on
-        % grid minor
-        ylabel(LaBeL1{i})
-        set(gca,'FontSize',25)
-    end
-    hL = legend([plt1, plt2],...
-        {'AGHF','Lyapunov Ctrl'},'AutoUpdate','off','Location', 'Best');
-    % set all units inside figure to normalized so that everything is scaling accordingly
-    set(findall(fh2,'Units','pixels'),'Units','normalized');
-    % do show figure on screen
-    set(fh2, 'visible', 'on')
-    % set figure units to pixels & adjust figure size
-    fh2.Units = 'pixels';
-    fh2.OuterPosition = [10 10 900 800];
-    % define resolution figure to be saved in dpi
-    res = 500;
-    % recalculate figure size to be saved
-    set(fh2,'PaperPositionMode','manual')
-    fh2.PaperUnits = 'inches';
-    fh2.PaperPosition = [0 0 5580 4320]/res;
-    % print(fh2,'./Figures/Quaternion_Tracking_6DoF','-dpng',sprintf('-r%d',res))
+    % % close all
+    % fh2 = figure;
+    % LaBeL1 = {'$q_{0}$','$q_{1}$','$q_{2}$','$q_{3}$',...
+    %     '$\omega_{1}$','$\omega_{2}$','$\omega_{3}$'};
+    % for i = 1:7
+    %     subplot(4,2,i)
+    %     plt1 = plot(tspan,Xval(i,:),'Color',c6,'LineWidth',2.5);
+    %     hold on
+    %     plt2 = plot(tspan,AgentNom.X_ode45(:,i).','Color',c11,'LineWidth',3);
+    %     grid on
+    %     % grid minor
+    %     ylabel(LaBeL1{i})
+    %     set(gca,'FontSize',25)
+    % end
+    % hL = legend([plt1, plt2],...
+    %     {'AGHF','Lyapunov Ctrl'},'AutoUpdate','off','Location', 'Best');
+    % newPosition = [0.7 0.15 0.1 0.1];
+    % newUnits = 'normalized';
+    % set(hL,'Position', newPosition,'Units', newUnits,'NumColumns',1);
+    % set(gca,'FontSize',25)
+    % % set all units inside figure to normalized so that everything is scaling accordingly
+    % set(findall(fh2,'Units','pixels'),'Units','normalized');
+    % % do show figure on screen
+    % set(fh2, 'visible', 'on')
+    % % set figure units to pixels & adjust figure size
+    % fh2.Units = 'pixels';
+    % fh2.OuterPosition = [10 10 900 800];
+    % % define resolution figure to be saved in dpi
+    % res = 500;
+    % % recalculate figure size to be saved
+    % set(fh2,'PaperPositionMode','manual')
+    % fh2.PaperUnits = 'inches';
+    % fh2.PaperPosition = [0 0 5580 4320]/res;
+    % % print(fh2,'./Figures/Quaternion_Tracking_6DoF','-dpng',sprintf('-r%d',res))
 end
 
 %% --------- Plotting the action integral across each iteratons ----------
@@ -582,7 +619,7 @@ for ll = 1
     cMat1 = [c5;c6];
     cMat2 = [c3;c1];
     cMat0 = [c7;c4];
-    
+    lWidth = 4;
     fh2 = figure;
     hold on
     plt0  = zeros(Num_Agent);
@@ -592,12 +629,14 @@ for ll = 1
         idx = 1+N*(jj-1):N*jj;
         
         h0 = plot3(Xval(idx(8),:),Xval(idx(9),:),Xval(idx(10),:),...
-            '-','Color',c4,'LineWidth',2.5);
-        % plot3(Xrel(:,8),Xrel(:,9),Xrel(:,10),'Color',c11,'LineWidth',2.5);
+            '-','Color',c4,'LineWidth',lWidth);
+        % plot3(Xrel(:,8),Xrel(:,9),Xrel(:,10),'Color',c11,'LineWidth',lWidth);
         % scatter3(X_temp(idx(8),:),X_temp(idx(9),:),X_temp(idx(10),:),...
         %     '*k','LineWidth',2.5);
-        plt0(:,jj) = plot3(X_ode45(:,idx(8)),X_ode45(:,idx(9)),X_ode45(:,idx(10)),...
-            '--','Color',cMat0(jj,:),'LineWidth',2.5);
+        plt0(:,jj) = plot3(AgentNom.X_ode45(:,idx(8)),...
+                            AgentNom.X_ode45(:,idx(9)),...
+                            AgentNom.X_ode45(:,idx(10)),...
+                            '-','Color',cMat0(jj,:),'LineWidth',lWidth);
         
         plt1(:,jj) = plot3(Xrel0(1,idx(1)),Xrel0(1,idx(2)),Xrel0(1,idx(3)),'*',...
             'LineWidth',3,...
@@ -616,8 +655,8 @@ for ll = 1
             'MarkerEdgeColor','k',...
             'MarkerFaceColor','k',...
             'MarkerSize',15);
-        plot3(Xrel0(:,idx(1)),Xrel0(:,idx(2)),Xrel0(:,idx(3)),'Color',cMat1(jj,:),'DisplayName','Initial Traj');
-        plot3(Xrel1(:,idx(1)),Xrel1(:,idx(2)),Xrel1(:,idx(3)),'Color',cMat2(jj,:));
+        plot3(Xrel0(:,idx(1)),Xrel0(:,idx(2)),Xrel0(:,idx(3)),'Color',cMat1(jj,:),'LineWidth',lWidth);
+        plot3(Xrel1(:,idx(1)),Xrel1(:,idx(2)),Xrel1(:,idx(3)),'Color',cMat2(jj,:),'LineWidth',lWidth);
         
         grid on
         xlabel('X [km]')
@@ -653,285 +692,6 @@ for ll = 1
 end
 % -------------------------------------------------------------------------
 
-%% ------------------------------------------------------------------------
-% ######################## Required Functions #############################
-% -------------------------------------------------------------------------
-function [c,f,s] = mypdexpde(x,t,u,DuDx,k1,k2,k3,N) % Define PDE; right-hand-side of AGHF
-
-XChief = full(ChiefState(x));
-LL = full(L(u,DuDx,k1,k2,k3,x,XChief));
-CasADiresult = full(dLdx(u,DuDx,k1,k2,k3,x,XChief,LL))';
-CasADir = [CasADiresult(1:13), CasADiresult(14:26)]; % [dL/dx, dL/dxdot]
-
-f = CasADir(:,2);  % dL/dxdot
-s = -CasADir(:,1); % -dL/dx
-c = ones(N,1);
-
-end
-
-function u0 = mypdexic(x,X0,Xf,T) % Initial condition for AGHF
-% Sinusoidal initial condition
-freq1 = pi/2 + 2*pi;
-freq2 = pi + 2*pi;
-u0 = X0*cos(freq1*x/T) ...
-     + Xf*sin(freq1*x/T) ...
-     - (X0+Xf)*sin(freq2*x/T);
-u0(1:4) = u0(1:4)/norm(u0(1:4)); % imposing the quaternion constraint
-end
-
-function [pl,ql,pr,qr] = mypdexbc(xl,ul,xr,ur,t,X0,Xf,N) % Boundary condition for AGHF
-
-pl = ul-X0;
-ql = zeros(N,1);
-pr = ur-Xf;
-qr = zeros(N,1);
-
-end
-% -------------------------------------------------------------------------
-
-function [Xdot] = NonDimentionalized_NLode1(t,X,Target)
-global mu_Earth Tc 
-format long
-ti = t*Tc;
-
-tilde = @(v) [0    -v(3)  v(2);
-    v(3)   0   -v(1);
-    -v(2)  v(1)    0];
-
-% Collecting relevant quantities
-X_chief = full(ChiefState0(t));
-r_target = X_chief(1:3);  v_target = X_chief(4:6); rt_norm = (r_target.'*r_target).^(1/2);
-rho_bar = X(1:3,:); drho_bar = X(4:6,:);
-
-% Redimensionalizing the variables in the ODE
-rho = rho_bar; rho_prime = drho_bar;
-rc  = [rt_norm; 0; 0] + rho; rc_norm =  (rc.'*rc).^(1/2);
-
-% Calculating the respective accelerations
-TN = DCM(r_target,v_target); % DCM's between target's RIC frame and ECI frame
-
-% Computing SRP acceleration (Cannonball model)
-[U_eci_Target, Xrel, Vrel, beta_chief] = F_CanonBall(ti,X_chief,Target); % SRP force on the Target
-% Computing the angular velocity and angular acceleration of the target frame
-h_vec = tilde(r_target)*v_target; h_norm = norm(h_vec);  u_acc = U_eci_Target;
-eh = h_vec/h_norm; h_dot = tilde(r_target)*u_acc; r_rel_norm = norm(Xrel);
-eh_dot = h_dot/h_norm - dot(h_vec,h_dot)*h_vec/h_norm^3;
-u_acc_dot = beta_chief*(Vrel/r_rel_norm^3 - 3*dot(Xrel,Vrel)*Xrel/r_rel_norm^5);
-
-    
-Omega = TN*( h_vec/rt_norm^2 + dot(u_acc,eh)*r_target/h_norm );  
-Omegadot = TN*( h_dot/rt_norm^2 ...
-                -2*dot(r_target,v_target)*h_vec/rt_norm^4 ...
-                - dot(h_vec,h_dot)*dot(u_acc,eh)*r_target/h_norm^3 ...
-                + (dot(u_acc_dot,eh) + dot(u_acc,eh_dot))*r_target/h_norm ...
-                + dot(u_acc,eh)*v_target/h_norm );
-
-% relative gravitationall acceleration and coriolis effects
-del_ag =  -mu_Earth/rc_norm^3*rc + mu_Earth/rt_norm^2*[1 0 0]'; % (2-body) gravitatinal
-Rotation_Effect = - 2*tilde(Omega)*rho_prime ...
-    - tilde(Omega)*(tilde(Omega)*rho) ...
-    - tilde(Omegadot)*rho;
-
-% Nondimetional relative ODE of the deputy
-Xdot = [drho_bar; (del_ag + Rotation_Effect)];
-Xdot = Xdot*Tc;
-
-end
-
-function [Xdot] = NonDimentionalized_NLode2(t,X,Target)
-global mu_Earth Tc 
-format long
-ti = t*Tc;
-
-tilde = @(v) [0    -v(3)  v(2);
-    v(3)   0   -v(1);
-    -v(2)  v(1)    0];
-
-% Collecting relevant quantities
-X_chief = full(ChiefStatef(t));
-r_target = X_chief(1:3);  v_target = X_chief(4:6); rt_norm = (r_target.'*r_target).^(1/2);
-rho_bar = X(1:3,:); drho_bar = X(4:6,:);
-
-% Redimensionalizing the variables in the ODE
-rho = rho_bar; rho_prime = drho_bar;
-rc  = [rt_norm; 0; 0] + rho; rc_norm =  (rc.'*rc).^(1/2);
-
-% Calculating the respective accelerations
-TN = DCM(r_target,v_target); % DCM's between target's RIC frame and ECI frame
-
-% Computing SRP acceleration (Cannonball model)
-[U_eci_Target, Xrel, Vrel, beta_chief] = F_CanonBall(ti,X_chief,Target); % SRP force on the Target
-% Computing the angular velocity and angular acceleration of the target frame
-h_vec = tilde(r_target)*v_target; h_norm = norm(h_vec);  u_acc = U_eci_Target;
-eh = h_vec/h_norm; h_dot = tilde(r_target)*u_acc; r_rel_norm = norm(Xrel);
-eh_dot = h_dot/h_norm - dot(h_vec,h_dot)*h_vec/h_norm^3;
-u_acc_dot = beta_chief*(Vrel/r_rel_norm^3 - 3*dot(Xrel,Vrel)*Xrel/r_rel_norm^5);
-
-    
-Omega = TN*( h_vec/rt_norm^2 + dot(u_acc,eh)*r_target/h_norm );  
-Omegadot = TN*( h_dot/rt_norm^2 ...
-                -2*dot(r_target,v_target)*h_vec/rt_norm^4 ...
-                - dot(h_vec,h_dot)*dot(u_acc,eh)*r_target/h_norm^3 ...
-                + (dot(u_acc_dot,eh) + dot(u_acc,eh_dot))*r_target/h_norm ...
-                + dot(u_acc,eh)*v_target/h_norm );
-
-% relative gravitationall acceleration and coriolis effects
-del_ag =  -mu_Earth/rc_norm^3*rc + mu_Earth/rt_norm^2*[1 0 0]'; % (2-body) gravitatinal
-Rotation_Effect = - 2*tilde(Omega)*rho_prime ...
-    - tilde(Omega)*(tilde(Omega)*rho) ...
-    - tilde(Omegadot)*rho;
-
-% Nondimetional relative ODE of the deputy
-Xdot = [drho_bar; (del_ag + Rotation_Effect)];
-Xdot = Xdot*Tc;
-
-end
-
-function [Xdot] = DragSRPNonDimentionalized_FlatPlateOde(t,X,Target,Chasser)
-format long
-global mu_Earth Tc
-ti = t*Tc;
-tilde = @(v) [ 0     -v(3)  v(2) ;
-               v(3)   0    -v(1) ;
-              -v(2)   v(1)  0   ];
-
-% Collecting relevant quantities
-X_chief = full(ChiefState(t));
-r_target = X_chief(1:3); v_target = X_chief(4:6);
-rt_norm = norm(r_target);
-TN = DCM(r_target,v_target); % DCM's between target's RIC frame and ECI frame
-
-q_Chasser = X(1:4)/norm(X(1:4));
-Omega_Chasser_body = X(5:7);
-rho = X(8:10); rho_prime = X(11:13);
-rc = [rt_norm+rho(1) rho(2) rho(3)]'; % RIC position of the chasser
-rc_norm = (rc.'*rc).^(1/2); 
-r_chasser = TN\rc; % ECI position of the chasser
-
-% Computing SRP acceleration (Cannonball model)
-[U_eci_Target, Xrel, Vrel, beta_chief] = F_CanonBall(ti,X_chief,Target); % SRP force on the Target
-FDeputy_body = F_SPR_FlatPlate(ti, r_chasser, Chasser, q_Chasser);
-
-%***************************************%
-% Rotational state differential equation
-I_Chasser        = diag(Chasser.Moment_Of_Inertia_Calculator());
-OmegaMat_Chasser = [0, -Omega_Chasser_body(1), -Omega_Chasser_body(2), -Omega_Chasser_body(3);
-                    Omega_Chasser_body(1),  0,  Omega_Chasser_body(3), -Omega_Chasser_body(2);
-                    Omega_Chasser_body(2), -Omega_Chasser_body(3),  0,  Omega_Chasser_body(1);
-                    Omega_Chasser_body(3), Omega_Chasser_body(2), -Omega_Chasser_body(1),  0];
-
-qdot      = 1/2*OmegaMat_Chasser*q_Chasser;
-Omega_dot = I_Chasser\(-tilde(Omega_Chasser_body)*(I_Chasser*Omega_Chasser_body));
-
-%***************************************%
-% Translational state differential equation
-BN = Quaternion_to_DCM(q_Chasser);
-U_eci_Chasser = BN\FDeputy_body(1:3);
-
-% Computing the angular velocity and angular acceleration of the target frame
-h_vec   = tilde(r_target)*v_target; h_norm = norm(h_vec); u_acc = U_eci_Target;
-eh      = h_vec/h_norm; h_dot = tilde(r_target)*u_acc; Xrel_norm = norm(Xrel);
-eh_dot  = h_dot/h_norm - dot(h_vec,h_dot)*h_vec/h_norm^3;
-acc_dot = beta_chief*(Vrel/Xrel_norm^3 - 3*dot(Xrel,Vrel)*Xrel/Xrel_norm^5);
-
-    
-Omega    = TN*( h_vec/rt_norm^2 + dot(u_acc,eh)*r_target/h_norm );  
-Omegadot = TN*( h_dot/rt_norm^2 ...
-                - 2*dot(r_target,v_target)*h_vec/rt_norm^4 ...
-                - dot(h_vec,h_dot)*dot(u_acc,eh)*r_target/h_norm^3 ...
-                + (dot(acc_dot,eh) + dot(u_acc,eh_dot))*r_target/h_norm ...
-                + dot(u_acc,eh)*v_target/h_norm );
-
-% Computing the relative acceleration
-Del_ag  =  -mu_Earth/rc_norm^3*rc + mu_Earth/rt_norm^2*[1 0 0]'; % (2-body) gravitatinal
-DelUsrp = TN*(U_eci_Chasser - U_eci_Target); % Delta-SRP
-Rotation_Effect = - 2*tilde(Omega)*rho_prime ...
-                  - tilde(Omega)*(tilde(Omega)*rho) ...
-                  - tilde(Omegadot)*rho;
-
-% Differential Drag acceleration
-Udrag_Target = Drag_CannonBall(r_target,v_target,Target);         
-v_chasser = v_target + TN\(rho_prime + cross(Omega,rho));
-UDrag_Chasser = Drag(r_chasser,v_chasser,q_Chasser,Chasser);
-DelDrag = TN*(UDrag_Chasser-Udrag_Target);
-
-% Integrating the relative trajectory
-Rho_dot = [rho_prime; DelDrag + DelUsrp + Del_ag + Rotation_Effect];
-
-% Collecting the rates of change
-Xdot = [qdot; Omega_dot; Rho_dot]*Tc;
-
-end
-% -------------------------------------------------------------------------
-
-function [Xdot] = DragSRPNonDimentionalized_FlatPlateOdeCasADi(t,X,Target,Chasser,X_chief)
-format long
-global mu_Earth Tc
-ti = t*Tc;
-
-tilde = @(v) [ 0     -v(3)  v(2) ;
-               v(3)   0    -v(1) ;
-              -v(2)   v(1)  0   ];
-
-% Collecting relevant quantities
-r_target = X_chief(1:3); v_target = X_chief(4:6);
-rt_norm = norm(r_target);
-TN = DCM(r_target,v_target); % DCM's between target's RIC frame and ECI frame
-
-q_Chasser = X(1:4)/norm(X(1:4));
-Omega_Chasser_body = X(5:7);
-rho = X(8:10);  rho_prime = X(11:13);
-rc = [rt_norm+rho(1) rho(2) rho(3)]'; % RIC position of the chasser
-rc_norm = (rc.'*rc).^(1/2); 
-r_chasser = TN\rc; % ECI position of the chasser
-
-% Computing SRP acceleration (Cannonball model)
-[U_eci_Target, Xrel, Vrel, beta_chief] = F_CanonBall(ti,X_chief,Target); % SRP force on the Target
-F_body = F_SPR_FlatPlate(ti, r_chasser, Chasser, q_Chasser);
-
-%***************************************%
-% Rotational state differential equation
-I_Chasser            = diag(Chasser.Moment_Of_Inertia_Calculator());
-Omega_matrix_Chasser = [0, -Omega_Chasser_body(1), -Omega_Chasser_body(2), -Omega_Chasser_body(3);
-                        Omega_Chasser_body(1),  0,  Omega_Chasser_body(3), -Omega_Chasser_body(2);
-                        Omega_Chasser_body(2), -Omega_Chasser_body(3),  0,  Omega_Chasser_body(1);
-                        Omega_Chasser_body(3), Omega_Chasser_body(2), -Omega_Chasser_body(1), 0];
-
-qdot      = 1/2*Omega_matrix_Chasser*q_Chasser;
-Omega_dot = I_Chasser\(-tilde(Omega_Chasser_body)*(I_Chasser*Omega_Chasser_body));
-
-%***************************************%
-% Translational state differential equation
-BN = Quaternion_to_DCM(q_Chasser);
-U_eci_Chasser = BN\F_body(1:3);
-
-% Computing the angular velocity and angular acceleration of the target frame
-h_vec   = tilde(r_target)*v_target; h_norm = norm(h_vec); u_acc = U_eci_Target;
-eh      = h_vec/h_norm; h_dot = tilde(r_target)*u_acc; r_rel_norm = norm(Xrel);
-eh_dot  = h_dot/h_norm - dot(h_vec,h_dot)*h_vec/h_norm^3;
-acc_dot = beta_chief*(Vrel/r_rel_norm^3 - 3*dot(Xrel,Vrel)*Xrel/r_rel_norm^5);
-
-    
-Omega    = TN*( h_vec/rt_norm^2 + dot(u_acc,eh)*r_target/h_norm );  
-Omegadot = TN*( h_dot/rt_norm^2 ...
-                - 2*dot(r_target,v_target)*h_vec/rt_norm^4 ...
-                - dot(h_vec,h_dot)*dot(u_acc,eh)*r_target/h_norm^3 ...
-                + (dot(acc_dot,eh) + dot(u_acc,eh_dot))*r_target/h_norm ...
-                + dot(u_acc,eh)*v_target/h_norm );
-
-% Computing the relative acceleration
-del_ag  =  -mu_Earth/rc_norm^3*rc + mu_Earth/rt_norm^2*[1 0 0]'; % (2-body) gravitatinal
-DelUsrp = TN*(U_eci_Chasser - U_eci_Target); % Delta-SRP
-Rotation_Effect = - 2*tilde(Omega)*rho_prime ...
-                  - tilde(Omega)*(tilde(Omega)*rho) ...
-                  - tilde(Omegadot)*rho;
 
 
-% Integrating the relative trajectory
-Rho_dot = [rho_prime; DelUsrp + del_ag + Rotation_Effect];
-
-% Collecting the rates of change
-Xdot = [qdot; Omega_dot; Rho_dot]*Tc;
-
-end
 
