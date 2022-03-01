@@ -251,9 +251,15 @@ for j = 1
     clear fd Lreplan Lreplandx
 end
 
+<<<<<<< HEAD
 
 
 
+=======
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%!!!!!!!!!!!!!!!!!!!!!!   Monte Carlo Simulation   !!!!!!!!!!!!!!!!!!!!!!
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+>>>>>>> e63e07350793ae22a2adb9a07baee9dcfc10cb95
 for Mc = 1:McRuns
     % ======================================================================= %
     % --------------- Setting the deputy initial conditions ------------------
@@ -554,5 +560,21 @@ for Mc = 1:McRuns
 end
 save MonteCarloResults.mat MonteCarlo -v7.3 % Saving the Results
 
+<<<<<<< HEAD
+=======
+% number = '2028171774';
+% carrier = 'AT&T';
+% message = 'Your MatLab code is done running!';
+% send_text_message(number,carrier,message)
+
+
+
+
+
+
+
+
+
+>>>>>>> e63e07350793ae22a2adb9a07baee9dcfc10cb95
 
 

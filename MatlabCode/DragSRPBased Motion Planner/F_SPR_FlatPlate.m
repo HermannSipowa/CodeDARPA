@@ -1,4 +1,4 @@
-function [F_body,Costheta] = F_SPR_FlatPlate(time,X,Spacecraft,q)
+function [a_srp,Costheta] = F_SPR_FlatPlate(time,X,Spacecraft,q)
 % -------------------------------------------------------------------------
 % [F_body] = F_SPR_FlatPlate(t, X, Spacecraft, Aug_X)
 % 
@@ -21,7 +21,6 @@ global JD
 % Description of the sun location relative to the sailcraft body frame
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ECI_to_BodyFrame = Quaternion_to_DCM(q);
-
 JulianDay = JD+time/86400;
 [R_Earth, V_Earth, ~] = Ephem(JulianDay,3,'EME2000'); % Earth position and velocity measured from the Sun
 XS = -R_Earth; % Sun's position measured from the Earth's ECI frame
@@ -39,27 +38,6 @@ AU = 149597870.7; % Distance between Earth and Sun (in Km)
 rs_squared = norm(Xrel/AU)^2;
 P = Cr*Pcrp*area/(mass*rs_squared)*1e-3; % in km/s^2
 n = [0 0 1]'; Costheta = n.'*s;
-
-% Computing the external force exerted on the sailcraft (in km/s^2)
-% if isa(Costheta,'casadi.SX')
-%     a_srp  = if_else(Costheta<0, zeros(3,1),...
-%         -P*Costheta*((1-rhos)*s+(rhod+2*rhos*Costheta)*n));
-% else
-%     if Costheta<0
-%         a_srp = zeros(3,1);
-%     else
-%         a_srp = -P*Costheta*((1-rhos)*s+(rhod+2*rhos*Costheta)*n);
-%     end
-% end
-
 a_srp = -P*Costheta*((1-rhos)*s+(rhod+2*rhos*Costheta)*n);
-
-F = mass*a_srp;
-% Computing the torque acting on the sailcraft
-%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rb = 0*Spacecraft.rhos*[0 0 1]';   % lever arm wrt the spacecraft center of mass 
-rb_tilde = [0 -rb(3) rb(2); rb(3) 0 -rb(1); -rb(2) rb(1) 0];
-thau_B = rb_tilde*F;               % the solar radiation torque
-F_body = [a_srp; thau_B];
 end
 
