@@ -252,9 +252,8 @@ for j = 1
 end
 
 
-%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%!!!!!!!!!!!!!!!!!!!!!!   Monte Carlo Simulation   !!!!!!!!!!!!!!!!!!!!!!
-%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 for Mc = 1:McRuns
     % ======================================================================= %
     % --------------- Setting the deputy initial conditions ------------------
@@ -324,7 +323,7 @@ for Mc = 1:McRuns
                            'Xrelf',{Traj2(:,1:6),  Traj2(:,7:12),...
                                     Traj2(:,13:18),Traj2(:,19:24),...
                                     Traj2(:,25:30),Traj2(:,31:36)},...
-                           'IterationIndex',cell(1,6),...
+                           'IterationTime',cell(1,6),...
                            'AGHFCostNew',cell(1,6));
     end 
     
@@ -419,7 +418,7 @@ for Mc = 1:McRuns
         clc
         tmax  = 1e7;
         t     = [0 logspace(-2,log10(tmax),tpoints-1)];
-        MCiteration = jk
+        MCiteration = Mc
         FMat2 = eye(N);
         DMat2 = diag([Penalty*ones(1,N-M) ones(1,M)]);
         HMat2 = (FMat2.')^(-1)*DMat2*FMat2^(-1);
@@ -469,26 +468,27 @@ for Mc = 1:McRuns
                 OtherAgentidx = 1:Num_Agent~=j;
                 ObstaclesList = find(Separation(j,:) <= KeepOutRadius(j) & Priority(j) < Priority...
                     & RelativeAngle(j,:)<ConeAngle);
-                if ~isempty(ObstaclesList)
+                DistFinish = norm(AgentNom(j).DesiredState(end,1:3)-AgentNom(j).DesiredState(idx,1:3));
+                if ~isempty(ObstaclesList) && DistFinish>=4
                     if j == 1
-                        AgentNom(j).IterationIndex(i1) = idx;
-                        AgentNom(j).KeepOutRadius(i1)  = KeepOutRadius(j);
+                        AgentNom(j).IterationTime(i1) = Tc*tk/3600;
+                        AgentNom(j).KeepOutRadius(i1) = KeepOutRadius(j);
                         i1 = i1+1;
                     elseif j == 2
-                        AgentNom(j).IterationIndex(i2) = idx;
-                        AgentNom(j).KeepOutRadius(i2)  = KeepOutRadius(j);
+                        AgentNom(j).IterationTime(i2) = Tc*tk/3600;
+                        AgentNom(j).KeepOutRadius(i2) = KeepOutRadius(j);
                         i2 = i2+1;
                     elseif j == 3
-                        AgentNom(j).IterationIndex(i3) = idx;
-                        AgentNom(j).KeepOutRadius(i3)  = KeepOutRadius(j);
+                        AgentNom(j).IterationTime(i3) = Tc*tk/3600;
+                        AgentNom(j).KeepOutRadius(i3) = KeepOutRadius(j);
                         i3 = i3+1;
                     elseif j == 4
-                        AgentNom(j).IterationIndex(i4) = idx;
-                        AgentNom(j).KeepOutRadius(i4)  = KeepOutRadius(j);
+                        AgentNom(j).IterationTime(i4) = Tc*tk/3600;
+                        AgentNom(j).KeepOutRadius(i4) = KeepOutRadius(j);
                         i4 = i4+1;
                     elseif j == 5
-                        AgentNom(j).IterationIndex(i5) = idx;
-                        AgentNom(j).KeepOutRadius(i5)  = KeepOutRadius(j);
+                        AgentNom(j).IterationTime(i5) = Tc*tk/3600;
+                        AgentNom(j).KeepOutRadius(i5) = KeepOutRadius(j);
                         i5 = i5+1;
                     end
                     
@@ -541,34 +541,18 @@ for Mc = 1:McRuns
             end
         end
         
-        ijk = 0;
+        MonteCarlo.NumbReplanningAgent(Mc) = 0;
         for k = 1:Num_Agent
             AgentNom(k).TotalCtrl_Int = 1e6*simpsons(vecnorm(AgentNom(k).Crtl,2,2),0,0.75,[]);
             AgentNom(k).TotalCtrl_New = 1e6*simpsons(vecnorm(AgentNom(k).CrtlNew,2,2),0,0.75,[]);
             MonteCarlo.CrtStd(Mc,k) = 100*(AgentNom(k).TotalCtrl_New - AgentNom(k).TotalCtrl_Int)/AgentNom(k).TotalCtrl_Int;
-            MonteCarlo.ReplanningSequences(Mc,k) = length(AgentNom(k).IterationIndex);
-            if ~isempty(AgentNom(k).AGHFCostNew)
-                ijk = ijk+1;
-            end
+            MonteCarlo.ReplanningSequences(Mc,k) = length(AgentNom(k).IterationTime);
+            MonteCarlo.NumbReplanningAgent(Mc) = MonteCarlo.NumbReplanningAgent(Mc) + length(AgentNom(k).IterationTime);
         end
-        MonteCarlo.NumbReplanningAgent = ijk;
     end
     
 end
 save MonteCarloResults.mat MonteCarlo -v7.3 % Saving the Results
-
-number = '2028171774';
-carrier = 'AT&T';
-message = 'Your MatLab code is done running!';
-send_text_message(number,carrier,message)
-
-
-
-
-
-
-
-
 
 
 
